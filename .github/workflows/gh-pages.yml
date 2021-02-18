@@ -1,4 +1,4 @@
-name: Build & Deploy
+name: GitHub Pages
 
 on:
   push:
@@ -14,7 +14,6 @@ jobs:
     - uses: actions/setup-go@v2
       with:
         go-version: 1.x
-    - run: mkdir dist
     - run: go run . > dist/index.html
     - name: Deploy to GitHub Pages
       if: github.ref == 'refs/heads/main'

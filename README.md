@@ -3,5 +3,5 @@
 ## Run
 
 ```
-$ go run . > output.html
+$ go run . > dist/index.html
 ```

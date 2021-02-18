@@ -1,6 +1,6 @@
 .env
 weather.ozbe.io
-output.html
+dist/index.html
 
 # Binaries for programs and plugins
 *.exe
