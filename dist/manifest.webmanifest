@@ -1,7 +1,7 @@
 {
   "background_color": "white",
   "description": "Melbourne hourly forecast for 48 hours",
-  "display": "fullscreen",
+  "display": "minimal-ui",
   "icons": [
     {
       "src": "apple-touch-icon.png",
