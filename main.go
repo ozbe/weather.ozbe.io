@@ -59,10 +59,18 @@ func (t *EpochTime) UnmarshalJSON(b []byte) error {
 }
 
 type HourlyForecast struct {
-	Time      EpochTime `json:"dt"`
+	Hour      EpochTime `json:"dt"`
 	FeelsLike float64   `json:"feels_like"`
 	UVI       float64   `json:"uvi"`
 	Weather   []Weather `json:"weather"`
+}
+
+func (f HourlyForecast) Date() string {
+	return time.Time(f.Hour).In(&loc).Format("Mon Jan 2")
+}
+
+func (f HourlyForecast) Time() string {
+	return time.Time(f.Hour).In(&loc).Format("03:00 PM")
 }
 
 func (f HourlyForecast) Temp() string {
@@ -115,11 +123,31 @@ func weather(lat float64, long float64) (*Forecast, error) {
 }
 
 func render(wr io.Writer, f Forecast) error {
+	group := make(map[string][]HourlyForecast)
+	groupOrder := make([]string, 0, 1)
+
+	for _, h := range f.Hourly {
+		date := h.Date()
+		hours, exists := group[date]
+		if !exists {
+			group[date] = []HourlyForecast{h}
+			groupOrder = append(groupOrder, date)
+		} else {
+			group[date] = append(hours, h)
+		}
+	}
+
 	const templateFilename = "template.html"
 	template, err := template.ParseFiles(templateFilename)
 	if err != nil {
 		return err
 	}
 
-	return template.Execute(wr, f)
+	return template.Execute(wr, struct {
+		Days           []string
+		ForecastsByDay map[string][]HourlyForecast
+	}{
+		Days:           groupOrder,
+		ForecastsByDay: group,
+	})
 }

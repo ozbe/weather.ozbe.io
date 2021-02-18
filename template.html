@@ -14,17 +14,21 @@
       width: 100%;
     }
 
-    tr:nth-child(odd) {
+    tbody > tr:nth-child(odd) {
       background-color: #E1F2F9;
     }
 
-    tr:nth-child(even) {
-      background-color: #A4D4E8;
+    tbody > tr:nth-child(even) {
+      background-color: #F8F9FB;
     }
 
-    tr:nth-child(1) {
+    thead > tr {
       background-color: #C3EAF1;
       padding: 10px;
+    }
+
+    tbody > tr.day {
+      background-color: #A4D4E8;
     }
 
     th {
@@ -46,20 +50,29 @@
 <body>
   <div class="content">
     <table>
-      <tr>
-        <th>Time</th>
-        <th>Feels Like</th>
-        <th>UV</th>
-        <th>Condition</th>
-      </tr>
-      {{range .Hourly}}
-      <tr>
-        <td>{{.Time.String}}</td>
-        <td>{{.Temp}}</td>
-        <td>{{.UV}}<br />{{.UVLevel}}</td>
-        <td><img src="https://openweathermap.org/img/w/{{.Icon}}.png" alt="{{.Condition}}"></td>
-      </tr>
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Feels Like</th>
+          <th>UV</th>
+          <th>Condition</th>
+        </tr>
+      </thead>
+      <tbody>
+      {{range $index, $day := .Days}}
+        <tr class="day">
+          <th colspan="4">{{$day}}</th>
+        </tr>
+        {{range index $.ForecastsByDay $day}}
+          <tr>
+            <td>{{.Time}}</td>
+            <td>{{.Temp}}</td>
+            <td>{{.UV}}<br />{{.UVLevel}}</td>
+            <td><img src="https://openweathermap.org/img/w/{{.Icon}}.png" alt="{{.Condition}}"></td>
+          </tr>
+        {{end}}
       {{end}}
+      </tbody>
     </table>
   </div>
 </body>
