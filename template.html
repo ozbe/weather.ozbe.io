@@ -1,22 +1,57 @@
 <!DOCTYPE html>
 <head>
   <title>ozbe.weather.io</title>
+  <style>
+    .content {
+      max-width: 500px;
+      margin: auto;
+    }
+
+    table {
+      width: 100%;
+    }
+
+    tr:nth-child(odd) {
+      background-color: #E1F2F9;
+    }
+
+    tr:nth-child(even) {
+      background-color: #A4D4E8;
+    }
+
+    tr:nth-child(1) {
+      background-color: #C3EAF1;
+      padding: 10px;
+    }
+
+    th {
+      padding-top: 10px;
+      padding-bottom: 10px;
+    }
+
+    td {
+      text-align: center;
+      vertical-align: middle;
+    }
+  </style>
 </head>
 <body>
-  <table>
-    <tr>
-      <th>Time</th>
-      <th>Feels Like</th>
-      <th>UV</th>
-      <th>Condition</th>
-    </tr>
-    {{range .Hourly}}
-    <tr>
-      <td>{{.Time.String}}</td>
-      <td>{{.FeelsLike}}</td>
-      <td>{{.UVI}}</td>
-      <td><img src="https://openweathermap.org/img/w/{{.Icon}}.png" alt="{{.Condition}}"></td>
-    </tr>
-    {{end}}
-  </table>
+  <div class="content">
+    <table>
+      <tr>
+        <th>Time</th>
+        <th>Feels Like</th>
+        <th>UV</th>
+        <th>Condition</th>
+      </tr>
+      {{range .Hourly}}
+      <tr>
+        <td>{{.Time.String}}</td>
+        <td>{{.FeelsLike}}</td>
+        <td>{{.UVI}}</td>
+        <td><img src="https://openweathermap.org/img/w/{{.Icon}}.png" alt="{{.Condition}}"></td>
+      </tr>
+      {{end}}
+    </table>
+  </div>
 </body>
