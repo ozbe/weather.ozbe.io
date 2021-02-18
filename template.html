@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<head>
+  <title>ozbe.weather.io</title>
+</head>
+<body>
+  <table>
+    <tr>
+      <th>Time</th>
+      <th>Feels Like</th>
+      <th>UV</th>
+      <th>Condition</th>
+    </tr>
+    {{range .Hourly}}
+    <tr>
+      <td>{{.Time.String}}</td>
+      <td>{{.FeelsLike}}</td>
+      <td>{{.UVI}}</td>
+      <td><img src="http://openweathermap.org/img/w/{{.Icon}}.png" alt="{{.Condition}}"></td>
+    </tr>
+    {{end}}
+  </table>
+</body>

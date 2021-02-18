@@ -1,4 +1,6 @@
 .env
+weather.ozbe.io
+output.html
 
 # Binaries for programs and plugins
 *.exe

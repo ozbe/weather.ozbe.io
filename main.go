@@ -3,6 +3,8 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"html/template"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -19,7 +21,10 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("%+v\n", f)
+	err = render(os.Stdout, *f)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 type Forecast struct {
@@ -27,6 +32,10 @@ type Forecast struct {
 }
 
 type EpochTime time.Time
+
+func (t EpochTime) String() string {
+	return time.Time(t).Format("2006-01-02 15:04")
+}
 
 func (t *EpochTime) UnmarshalJSON(b []byte) error {
 	var i int64
@@ -42,7 +51,21 @@ func (t *EpochTime) UnmarshalJSON(b []byte) error {
 type HourlyForecast struct {
 	Time      EpochTime `json:"dt"`
 	FeelsLike float64   `json:"feels_like"`
-	Uvi       float64   `json:"uvi"`
+	UVI       float64   `json:"uvi"`
+	Weather   []Weather `json:"weather"`
+}
+
+func (f HourlyForecast) Condition() string {
+	return f.Weather[0].Description
+}
+
+func (f HourlyForecast) Icon() string {
+	return f.Weather[0].Icon
+}
+
+type Weather struct {
+	Description string `json:"description"`
+	Icon        string `json:"icon"`
 }
 
 func weather(lat float64, long float64) (*Forecast, error) {
@@ -61,4 +84,14 @@ func weather(lat float64, long float64) (*Forecast, error) {
 	}
 
 	return &result, nil
+}
+
+func render(wr io.Writer, f Forecast) error {
+	const templateFilename = "template.html"
+	template, err := template.ParseFiles(templateFilename)
+	if err != nil {
+		return err
+	}
+
+	return template.Execute(wr, f)
 }
