@@ -55,6 +55,20 @@ type HourlyForecast struct {
 	Weather   []Weather `json:"weather"`
 }
 
+func (f HourlyForecast) UV() string {
+	return fmt.Sprintf("%.f", f.UVI)
+}
+
+func (f HourlyForecast) UVLevel() string {
+	if f.UVI < 5 {
+		return "Low"
+	} else if f.UVI < 8 {
+		return "Moderate"
+	} else {
+		return "Extreme"
+	}
+}
+
 func (f HourlyForecast) Condition() string {
 	return f.Weather[0].Description
 }
