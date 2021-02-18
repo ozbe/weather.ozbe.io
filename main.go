@@ -43,10 +43,6 @@ type Forecast struct {
 
 type EpochTime time.Time
 
-func (t EpochTime) String() string {
-	return time.Time(t).In(&loc).Format("Mon Jan 2 03:00PM")
-}
-
 func (t *EpochTime) UnmarshalJSON(b []byte) error {
 	var i int64
 	err := json.Unmarshal(b, &i)
@@ -65,12 +61,16 @@ type HourlyForecast struct {
 	Weather   []Weather `json:"weather"`
 }
 
+func (f HourlyForecast) LocalTime() time.Time {
+	return time.Time(f.Hour).In(&loc)
+}
+
 func (f HourlyForecast) Date() string {
-	return time.Time(f.Hour).In(&loc).Format("Mon Jan 2")
+	return f.LocalTime().Format("Mon Jan 2")
 }
 
 func (f HourlyForecast) Time() string {
-	return time.Time(f.Hour).In(&loc).Format("03:00 PM")
+	return f.LocalTime().Format("03:00 PM")
 }
 
 func (f HourlyForecast) Temp() string {
@@ -122,32 +122,44 @@ func weather(lat float64, long float64) (*Forecast, error) {
 	return &result, nil
 }
 
+type TemplateData struct {
+	Days           []string
+	ForecastsByDay map[string][]HourlyForecast
+}
+
 func render(wr io.Writer, f Forecast) error {
-	group := make(map[string][]HourlyForecast)
-	groupOrder := make([]string, 0, 1)
+	data := templateData(f)
+
+	return renderTemplate(wr, data)
+}
+
+func templateData(f Forecast) TemplateData {
+	days := make([]string, 0, 1)
+	forecastsByDay := make(map[string][]HourlyForecast)
 
 	for _, h := range f.Hourly {
 		date := h.Date()
-		hours, exists := group[date]
+		hours, exists := forecastsByDay[date]
 		if !exists {
-			group[date] = []HourlyForecast{h}
-			groupOrder = append(groupOrder, date)
+			forecastsByDay[date] = []HourlyForecast{h}
+			days = append(days, date)
 		} else {
-			group[date] = append(hours, h)
+			forecastsByDay[date] = append(hours, h)
 		}
 	}
 
+	return TemplateData{
+		Days:           days,
+		ForecastsByDay: forecastsByDay,
+	}
+}
+
+func renderTemplate(wr io.Writer, data TemplateData) error {
 	const templateFilename = "template.html"
 	template, err := template.ParseFiles(templateFilename)
 	if err != nil {
 		return err
 	}
 
-	return template.Execute(wr, struct {
-		Days           []string
-		ForecastsByDay map[string][]HourlyForecast
-	}{
-		Days:           groupOrder,
-		ForecastsByDay: group,
-	})
+	return template.Execute(wr, data)
 }
