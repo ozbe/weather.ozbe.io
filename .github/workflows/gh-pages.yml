@@ -15,6 +15,8 @@ jobs:
       with:
         go-version: 1.x
     - run: go run . > dist/index.html
+      env:
+        OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
     - name: Deploy to GitHub Pages
       if: github.ref == 'refs/heads/main'
       uses: qoomon/deploy-to-github-pages-action@v1
