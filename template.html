@@ -55,7 +55,7 @@
       {{range .Hourly}}
       <tr>
         <td>{{.Time.String}}</td>
-        <td>{{.FeelsLike}}</td>
+        <td>{{.Temp}}</td>
         <td>{{.UV}}<br />{{.UVLevel}}</td>
         <td><img src="https://openweathermap.org/img/w/{{.Icon}}.png" alt="{{.Condition}}"></td>
       </tr>

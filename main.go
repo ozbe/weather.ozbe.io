@@ -13,6 +13,16 @@ import (
 	"github.com/joho/godotenv"
 )
 
+var loc time.Location
+
+func init() {
+	l, err := time.LoadLocation("Australia/Melbourne")
+	if err != nil {
+		log.Fatal(err)
+	}
+	loc = *l
+}
+
 func main() {
 	godotenv.Load()
 
@@ -34,7 +44,7 @@ type Forecast struct {
 type EpochTime time.Time
 
 func (t EpochTime) String() string {
-	return time.Time(t).Format("2006-01-02 15:04")
+	return time.Time(t).In(&loc).Format("Mon Jan 2 03:00PM")
 }
 
 func (t *EpochTime) UnmarshalJSON(b []byte) error {
@@ -53,6 +63,10 @@ type HourlyForecast struct {
 	FeelsLike float64   `json:"feels_like"`
 	UVI       float64   `json:"uvi"`
 	Weather   []Weather `json:"weather"`
+}
+
+func (f HourlyForecast) Temp() string {
+	return fmt.Sprintf("%.1f°", f.FeelsLike)
 }
 
 func (f HourlyForecast) UV() string {
