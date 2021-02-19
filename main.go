@@ -95,6 +95,34 @@ func (f HourlyForecast) Condition() string {
 	return f.Weather[0].Description
 }
 
+func (f HourlyForecast) ConditionSymbol() template.HTML {
+	icon := ""
+
+	switch f.Icon() {
+	case "01d":
+		icon = "☀️"
+	case "01n":
+		icon = "🌑"
+	case "02d":
+		icon = "&#x2601"
+	case "02n":
+		icon = "🌥"
+	case "03d", "03n", "04d", "04n":
+		icon = "&#x2601"
+	case "09d", "09n":
+		icon = "🌧"
+	case "10d", "10n":
+		icon = "🌦"
+	case "11d", "11n":
+		icon = "⛈"
+	case "13d", "13n":
+		icon = "❄"
+	case "50d", "50n":
+		icon = "🌫"
+	}
+	return template.HTML(icon)
+}
+
 func (f HourlyForecast) Icon() string {
 	return f.Weather[0].Icon
 }
