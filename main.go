@@ -1,10 +1,12 @@
 package main
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"html/template"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -125,15 +127,19 @@ func weather(lat float64, long float64) (*Forecast, error) {
 type TemplateData struct {
 	Days           []string
 	ForecastsByDay map[string][]HourlyForecast
+	IconSrc        map[string]template.URL
 }
 
 func render(wr io.Writer, f Forecast) error {
-	data := templateData(f)
+	data, err := templateData(f)
+	if err != nil {
+		return err
+	}
 
 	return renderTemplate(wr, data)
 }
 
-func templateData(f Forecast) TemplateData {
+func templateData(f Forecast) (*TemplateData, error) {
 	days := make([]string, 0, 1)
 	forecastsByDay := make(map[string][]HourlyForecast)
 
@@ -148,13 +154,69 @@ func templateData(f Forecast) TemplateData {
 		}
 	}
 
-	return TemplateData{
+	icons, err := mapIconImgSrc(f)
+	if err != nil {
+		return nil, err
+	}
+
+	return &TemplateData{
 		Days:           days,
 		ForecastsByDay: forecastsByDay,
-	}
+		IconSrc:        *icons,
+	}, nil
 }
 
-func renderTemplate(wr io.Writer, data TemplateData) error {
+type iconSrc struct {
+	icon string
+	src  template.URL
+	err  error
+}
+
+func mapIconImgSrc(f Forecast) (*map[string]template.URL, error) {
+	icons := make(map[string]bool)
+	result := make(map[string]template.URL)
+
+	for _, h := range f.Hourly {
+		icons[h.Icon()] = true
+	}
+
+	numIcons := len(icons)
+	ch := make(chan iconSrc, numIcons)
+	for k := range icons {
+		go func(icon string) {
+			src, err := iconImgSrc(icon)
+			ch <- iconSrc{icon, src, err}
+		}(k)
+	}
+
+	for i := numIcons; i > 0; i-- {
+		i := <-ch
+		if i.err != nil {
+			return nil, i.err
+		}
+		result[i.icon] = i.src
+	}
+
+	return &result, nil
+}
+
+func iconImgSrc(icon string) (template.URL, error) {
+	res, err := http.Get(fmt.Sprintf("https://openweathermap.org/img/w/%s.png", icon))
+	if err != nil {
+		return "", err
+	}
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return "", err
+	}
+
+	encodedImg := base64.StdEncoding.EncodeToString(body)
+	src := fmt.Sprintf("data:image/png;base64,%s", encodedImg)
+	return template.URL(src), nil
+}
+
+func renderTemplate(wr io.Writer, data *TemplateData) error {
 	const templateFilename = "template.html"
 	template, err := template.ParseFiles(templateFilename)
 	if err != nil {
