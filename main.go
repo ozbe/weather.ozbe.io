@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -18,7 +19,9 @@ import (
 var loc time.Location
 
 func init() {
-	l, err := time.LoadLocation("Australia/Melbourne")
+	godotenv.Load()
+
+	l, err := time.LoadLocation(os.Getenv("LOCATION"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -26,9 +29,12 @@ func init() {
 }
 
 func main() {
-	godotenv.Load()
+	long, lat, err := coordinates()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	f, err := weather(-37.840935, 144.946457)
+	f, err := weather(long, lat)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -37,6 +43,20 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func coordinates() (lat float64, long float64, err error) {
+	lat, err = strconv.ParseFloat(os.Getenv("LAT"), 64)
+	if err != nil {
+		return
+	}
+
+	long, err = strconv.ParseFloat(os.Getenv("LONG"), 64)
+	if err != nil {
+		return
+	}
+
+	return
 }
 
 type Forecast struct {
