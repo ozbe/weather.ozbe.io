@@ -76,16 +76,20 @@
         </tr>
       </thead>
       <tbody>
-      {{range $index, $day := .Days}}
+      {{range .Days}}
         <tr class="day">
-          <th colspan="4">{{$day}}</th>
+          <th colspan="4">{{.Date}}</th>
         </tr>
-        {{range index $.ForecastsByDay $day}}
+        {{range .Hours}}
           <tr>
             <td>{{.Time}}</td>
             <td>{{.Temp}}</td>
-            <td>{{.UV}}<br />{{.UVLevel}}</td>
-            <td><img src="{{index $.IconSrc .Icon }}" alt="{{.Condition}}"></td>
+            {{with .UV}}
+            <td>{{.Index}}<br />{{.Classification}}</td>
+            {{end}}
+            {{with .Condition}}
+            <td><img src="{{.Icon}}" alt="{{.Description}}"></td>
+            {{end}}
           </tr>
         {{end}}
       {{end}}
