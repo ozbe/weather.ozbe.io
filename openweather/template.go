@@ -151,8 +151,8 @@ func TemplateData(f Forecast, loc time.Location) (t.Data, error) {
 		for hi, hour := range hours {
 			localTime := time.Time(hour.Hour).In(&loc)
 			ths[hi] = templateHour{
-				time: localTime.Format("03:00 PM"),
-				temp: fmt.Sprintf("%.1f", hour.FeelsLike),
+				time: localTime.Format("3 PM"),
+				temp: fmt.Sprintf("%.f", hour.FeelsLike),
 				uv: templateUV{
 					index:          fmt.Sprintf("%.f", hour.UVI),
 					classification: uvLevel(hour),
