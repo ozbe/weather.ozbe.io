@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/ozbe/weather.ozbe.io/openweather"
@@ -21,12 +22,17 @@ func main() {
 		log.Fatal(err)
 	}
 
+	loc, err := time.LoadLocation(os.Getenv("LOCATION"))
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	f, err := openweather.GetWeather(long, lat)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = render(os.Stdout, *f)
+	err = render(os.Stdout, *f, *loc)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -46,8 +52,8 @@ func coordinates() (lat float64, long float64, err error) {
 	return
 }
 
-func render(wr io.Writer, f openweather.Forecast) error {
-	data, err := openweather.TemplateData(f)
+func render(wr io.Writer, f openweather.Forecast, loc time.Location) error {
+	data, err := openweather.TemplateData(f, loc)
 	if err != nil {
 		return err
 	}

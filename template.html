@@ -4,6 +4,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="manifest" href="manifest.webmanifest">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
   <style>
     body {
       font-family: Sans-Serif;
@@ -27,9 +28,8 @@
       background-color: #F8F9FB;
     }
 
-    thead > tr {
-      background-color: #C3EAF1;
-      padding: 10px;
+    tr.chart {
+      background-color: #E1F2F9 !important;
     }
 
     tbody > tr.day {
@@ -61,29 +61,36 @@
       width: 32;
       height: 32;
     }
+
+    canvas {
+      -moz-user-select: none;
+      -webkit-user-select: none;
+      -ms-user-select: none;
+    }
   </style>
 </head>
 <body>
   <div class="content">
     <h1>Melbourne</h1>
     <table>
-      <thead>
+      <tbody>
+      {{range $index, $day := .Days}}
+        <tr class="day">
+          <th colspan="4">{{$day.Date}}</th>
+        </tr>
+        <tr class="chart">
+          <td colspan="4"><canvas id="canvas{{$index}}"></canvas></td>
+        </tr>
         <tr>
           <th>Time</th>
           <th>Feels Like</th>
           <th>UV</th>
           <th>Condition</th>
         </tr>
-      </thead>
-      <tbody>
-      {{range .Days}}
-        <tr class="day">
-          <th colspan="4">{{.Date}}</th>
-        </tr>
-        {{range .Hours}}
+        {{range $day.Hours}}
           <tr>
             <td>{{.Time}}</td>
-            <td>{{.Temp}}</td>
+            <td>{{.Temp}}°</td>
             {{with .UV}}
             <td>{{.Index}}<br />{{.Classification}}</td>
             {{end}}
@@ -99,4 +106,79 @@
   </div>
   <script data-goatcounter="https://ozbe-weather.goatcounter.com/count"
         async src="//gc.zgo.at/count.js"></script>
+
+  <script>
+    window.addEventListener('load', function () {
+      Chart.scaleService.updateScaleDefaults('linear', {
+        ticks: {
+          stepSize: 1,
+          precision: 0,
+        }
+      });
+    }, false);
+  </script>
+  {{range $index, $day := .Days}}
+  <script>
+      window.addEventListener('load', function() {
+        var lineChartData = {
+        labels: {{$day.Times}},
+        datasets: [{
+          label: 'Feels Like',
+          borderColor: 'rgb(164, 212, 232)',
+          borderWidth: 4,
+          backgroundColor: 'rgb(164, 212, 232)',
+          fill: false,
+          data: {{$day.Temps}},
+          yAxisID: 'y-axis-1',
+          pointRadius: 0,
+        }, {
+          label: 'UV',
+          borderColor: 'rgb(248, 249, 251)',
+          pointRadius: 0,
+          borderWidth: 4,
+          backgroundColor: 'rgb(248, 249, 251)',
+          fill: false,
+          data: {{$day.UVs}},
+          yAxisID: 'y-axis-2'
+        }]
+      };
+      
+      var ctx = document.getElementById('canvas{{$index}}').getContext('2d');
+      Chart.Line(ctx, {
+        data: lineChartData,
+        options: {
+          responsive: true,
+          hoverMode: 'index',
+          stacked: false,
+          tooltips: {
+            mode: 'index',
+            intersect: false
+          },
+          layout: {
+            padding: 20,
+          },
+          legend: {
+            display: false,
+          },
+          scales: {
+            xAxes: [{
+              display: false,
+            }],
+            yAxes: [{
+              type: 'linear',
+              display: false,
+              position: 'left',
+              id: 'y-axis-1',
+            }, {
+              type: 'linear',
+              display: false,
+              position: 'right',
+              id: 'y-axis-2',
+            }],
+          }
+        }
+      });
+    }, false);
+  </script>
+  {{end}}
 </body>

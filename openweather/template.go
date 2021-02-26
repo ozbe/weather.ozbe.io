@@ -4,23 +4,10 @@ import (
 	"encoding/base64"
 	"fmt"
 	"html/template"
-	"log"
-	"os"
 	"time"
 
 	t "github.com/ozbe/weather.ozbe.io/template"
 )
-
-var loc time.Location
-
-func init() {
-	// TODO - consider moving this to an explicit argument
-	l, err := time.LoadLocation(os.Getenv("LOCATION"))
-	if err != nil {
-		log.Fatal(err)
-	}
-	loc = *l
-}
 
 type templateData struct {
 	days []templateDay
@@ -43,6 +30,36 @@ func (d templateDay) Hours() []t.Hour {
 	}
 
 	return hours
+}
+
+func (d templateDay) Times() []string {
+	times := make([]string, len(d.hours))
+
+	for i, hour := range d.hours {
+		times[i] = hour.Time()
+	}
+
+	return times
+}
+
+func (d templateDay) Temps() []string {
+	temps := make([]string, len(d.hours))
+
+	for i, hour := range d.hours {
+		temps[i] = hour.Temp()
+	}
+
+	return temps
+}
+
+func (d templateDay) UVs() []string {
+	uvs := make([]string, len(d.hours))
+
+	for i, hour := range d.hours {
+		uvs[i] = hour.UV().Index()
+	}
+
+	return uvs
 }
 
 type templateHour struct {
@@ -104,50 +121,13 @@ func (d templateData) Days() []t.Day {
 	return days
 }
 
-func (f HourlyForecast) localTime() time.Time {
-	return time.Time(f.Hour).In(&loc)
-}
-
-func (f HourlyForecast) date() string {
-	return f.localTime().Format("Mon Jan 2")
-}
-
-func (f HourlyForecast) time() string {
-	return f.localTime().Format("03:00 PM")
-}
-
-func (f HourlyForecast) temp() string {
-	return fmt.Sprintf("%.1f°", f.FeelsLike)
-}
-
-func (f HourlyForecast) uv() string {
-	return fmt.Sprintf("%.f", f.UVI)
-}
-
-func (f HourlyForecast) uvLevel() string {
-	if f.UVI < 5 {
-		return "Low"
-	} else if f.UVI < 8 {
-		return "Moderate"
-	} else {
-		return "Extreme"
-	}
-}
-
-func (f HourlyForecast) Condition() string {
-	return f.Weather[0].Description
-}
-
-func (f HourlyForecast) Icon() string {
-	return f.Weather[0].Icon
-}
-
-func TemplateData(f Forecast) (t.Data, error) {
+func TemplateData(f Forecast, loc time.Location) (t.Data, error) {
 	dates := make([]string, 0, 2)
 	forecastsByDate := make(map[string][]HourlyForecast)
 
 	for _, h := range f.Hourly {
-		date := h.date()
+		localTime := time.Time(h.Hour).In(&loc)
+		date := localTime.Format("Mon Jan 2")
 		hours, exists := forecastsByDate[date]
 		if !exists {
 			forecastsByDate[date] = []HourlyForecast{h}
@@ -164,23 +144,22 @@ func TemplateData(f Forecast) (t.Data, error) {
 
 	tds := make([]templateDay, len(dates))
 
-	fmt.Printf("%+v\n", dates)
-
 	for di, date := range dates {
 		hours := forecastsByDate[date]
 		ths := make([]templateHour, len(hours))
 
 		for hi, hour := range hours {
+			localTime := time.Time(hour.Hour).In(&loc)
 			ths[hi] = templateHour{
-				time: hour.time(),
-				temp: hour.temp(),
+				time: localTime.Format("03:00 PM"),
+				temp: fmt.Sprintf("%.1f", hour.FeelsLike),
 				uv: templateUV{
-					index:          hour.uv(),
-					classification: hour.uvLevel(),
+					index:          fmt.Sprintf("%.f", hour.UVI),
+					classification: uvLevel(hour),
 				},
 				condition: templateCondition{
-					icon:        template.URL((*icons)[hour.Icon()]),
-					description: hour.Condition(),
+					icon:        template.URL((*icons)[hour.Weather[0].Icon]),
+					description: hour.Weather[0].Description,
 				},
 			}
 		}
@@ -188,11 +167,19 @@ func TemplateData(f Forecast) (t.Data, error) {
 		tds[di] = templateDay{date, ths}
 	}
 
-	fmt.Printf("%+v\n", tds)
-
 	return &templateData{
 		days: tds,
 	}, nil
+}
+
+func uvLevel(f HourlyForecast) string {
+	if f.UVI < 5 {
+		return "Low"
+	} else if f.UVI < 8 {
+		return "Moderate"
+	} else {
+		return "Extreme"
+	}
 }
 
 type iconSrc struct {
@@ -206,7 +193,7 @@ func mapIconImgSrc(f Forecast) (*map[string]string, error) {
 	result := make(map[string]string)
 
 	for _, h := range f.Hourly {
-		icons[h.Icon()] = true
+		icons[h.Weather[0].Icon] = true
 	}
 
 	numIcons := len(icons)

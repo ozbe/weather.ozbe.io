@@ -9,6 +9,9 @@ type Data interface {
 type Day interface {
 	Date() string
 	Hours() []Hour
+	Times() []string
+	Temps() []string
+	UVs() []string
 }
 
 type Hour interface {
