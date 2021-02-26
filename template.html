@@ -181,4 +181,29 @@
     }, false);
   </script>
   {{end}}
+  <script>
+    function currentHour() {
+      var d = new Date();
+      var h = d.getHours();
+
+      if (h > 12) {
+        return "" + h % 12 + " PM";
+      } 
+      return "" + h + " AM";
+    }
+
+    window.addEventListener('load', function() {
+      var hour = currentHour();
+      var tbody = document.getElementsByTagName('tbody')[0];
+      var rows = tbody.children;
+      for (var i = 0; i < rows.length; i++) {
+        var row = rows[i];
+        var timeCell = row.children[0];
+        if (timeCell.textContent === hour) {
+          row.classList.add('highlight');
+          break;
+        }
+      }
+    }, false);
+  </script>
 </body>
