@@ -121,23 +121,28 @@ func (d templateData) Days() []t.Day {
 	return days
 }
 
-func TemplateData(f Forecast, loc time.Location) (t.Data, error) {
+func TemplateData(lat float64, long float64, loc time.Location) (t.Data, error) {
+	f, err := getWeather(lat, long)
+	if err != nil {
+		return nil, err
+	}
+
 	dates := make([]string, 0, 2)
-	forecastsByDate := make(map[string][]HourlyForecast)
+	forecastsByDate := make(map[string][]hourlyForecast)
 
 	for _, h := range f.Hourly {
 		localTime := time.Time(h.Hour).In(&loc)
 		date := localTime.Format("Mon Jan 2")
 		hours, exists := forecastsByDate[date]
 		if !exists {
-			forecastsByDate[date] = []HourlyForecast{h}
+			forecastsByDate[date] = []hourlyForecast{h}
 			dates = append(dates, date)
 		} else {
 			forecastsByDate[date] = append(hours, h)
 		}
 	}
 
-	icons, err := mapIconImgSrc(f)
+	icons, err := mapIconImgSrc(*f)
 	if err != nil {
 		return nil, err
 	}
@@ -149,17 +154,16 @@ func TemplateData(f Forecast, loc time.Location) (t.Data, error) {
 		ths := make([]templateHour, len(hours))
 
 		for hi, hour := range hours {
-			localTime := time.Time(hour.Hour).In(&loc)
 			ths[hi] = templateHour{
-				time: localTime.Format("3 PM"),
-				temp: fmt.Sprintf("%.f", hour.FeelsLike),
+				time: localTime(loc, hour),
+				temp: temp(hour),
 				uv: templateUV{
-					index:          fmt.Sprintf("%.f", hour.UVI),
+					index:          uvIndex(hour),
 					classification: uvLevel(hour),
 				},
 				condition: templateCondition{
-					icon:        template.URL((*icons)[hour.Weather[0].Icon]),
-					description: hour.Weather[0].Description,
+					icon:        icon(icons, hour),
+					description: conditionDescription(hour),
 				},
 			}
 		}
@@ -172,14 +176,35 @@ func TemplateData(f Forecast, loc time.Location) (t.Data, error) {
 	}, nil
 }
 
-func uvLevel(f HourlyForecast) string {
-	if f.UVI < 5 {
+func localTime(loc time.Location, h hourlyForecast) string {
+	localTime := time.Time(h.Hour).In(&loc)
+	return localTime.Format("3 PM")
+}
+
+func temp(h hourlyForecast) string {
+	return fmt.Sprintf("%.f", h.FeelsLike)
+}
+
+func uvIndex(h hourlyForecast) string {
+	return fmt.Sprintf("%.f", h.UVI)
+}
+
+func uvLevel(h hourlyForecast) string {
+	if h.UVI < 5 {
 		return "Low"
-	} else if f.UVI < 8 {
+	} else if h.UVI < 8 {
 		return "Moderate"
 	} else {
 		return "Extreme"
 	}
+}
+
+func icon(icons *map[string]string, h hourlyForecast) template.URL {
+	return template.URL((*icons)[h.Weather[0].Icon])
+}
+
+func conditionDescription(h hourlyForecast) string {
+	return h.Weather[0].Description
 }
 
 type iconSrc struct {
@@ -188,7 +213,7 @@ type iconSrc struct {
 	err  error
 }
 
-func mapIconImgSrc(f Forecast) (*map[string]string, error) {
+func mapIconImgSrc(f forecast) (*map[string]string, error) {
 	icons := make(map[string]bool)
 	result := make(map[string]string)
 

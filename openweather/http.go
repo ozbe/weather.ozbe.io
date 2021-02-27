@@ -9,36 +9,36 @@ import (
 	"time"
 )
 
-type Forecast struct {
-	Hourly []HourlyForecast `json:"hourly"`
+type forecast struct {
+	Hourly []hourlyForecast `json:"hourly"`
 }
 
-type EpochTime time.Time
+type epochTime time.Time
 
-func (t *EpochTime) UnmarshalJSON(b []byte) error {
+func (t *epochTime) UnmarshalJSON(b []byte) error {
 	var i int64
 	err := json.Unmarshal(b, &i)
 	if err != nil {
 		return err
 	}
 
-	*t = EpochTime(time.Unix(i, 0))
+	*t = epochTime(time.Unix(i, 0))
 	return nil
 }
 
-type HourlyForecast struct {
-	Hour      EpochTime `json:"dt"`
+type hourlyForecast struct {
+	Hour      epochTime `json:"dt"`
 	FeelsLike float64   `json:"feels_like"`
 	UVI       float64   `json:"uvi"`
-	Weather   []Weather `json:"weather"`
+	Weather   []weather `json:"weather"`
 }
 
-type Weather struct {
+type weather struct {
 	Description string `json:"description"`
 	Icon        string `json:"icon"`
 }
 
-func GetWeather(lat float64, long float64) (*Forecast, error) {
+func getWeather(lat float64, long float64) (*forecast, error) {
 	apiKey := os.Getenv("OPENWEATHER_API_KEY")
 	url := fmt.Sprintf("https://api.openweathermap.org/data/2.5/onecall?lat=%f&lon=%f&exclude=current,minutely,daily,alerts&units=metric&appid=%s", lat, long, apiKey)
 
@@ -47,7 +47,7 @@ func GetWeather(lat float64, long float64) (*Forecast, error) {
 		return nil, err
 	}
 
-	var result Forecast
+	var result forecast
 	err = json.NewDecoder(res.Body).Decode(&result)
 	if err != nil {
 		return nil, err

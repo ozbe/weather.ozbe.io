@@ -27,7 +27,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-	err = render(os.Stdout, lat, long, *loc)
+	data, err := templateData(lat, long, *loc)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = render(os.Stdout, data)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -51,16 +56,10 @@ func location() (*time.Location, error) {
 	return time.LoadLocation(os.Getenv("LOCATION"))
 }
 
-func render(wr io.Writer, lat float64, long float64, loc time.Location) error {
-	f, err := openweather.GetWeather(lat, long)
-	if err != nil {
-		log.Fatal(err)
-	}
+func templateData(lat float64, long float64, loc time.Location) (template.Data, error) {
+	return openweather.TemplateData(lat, long, loc)
+}
 
-	data, err := openweather.TemplateData(*f, loc)
-	if err != nil {
-		return err
-	}
-
+func render(wr io.Writer, data template.Data) error {
 	return template.Render(wr, &data)
 }
