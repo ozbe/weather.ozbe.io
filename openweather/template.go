@@ -200,7 +200,7 @@ func mapIconImgSrc(f Forecast) (*map[string]string, error) {
 	ch := make(chan iconSrc, numIcons)
 	for i := range icons {
 		go func(icon string) {
-			img, err := iconImgSrc(icon)
+			img, err := iconImage(icon)
 			encodedImg := base64.StdEncoding.EncodeToString(img)
 			src := fmt.Sprintf("data:image/png;base64,%s", encodedImg)
 			ch <- iconSrc{icon, src, err}

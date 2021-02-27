@@ -56,8 +56,7 @@ func GetWeather(lat float64, long float64) (*Forecast, error) {
 	return &result, nil
 }
 
-// FIXME - change name
-func iconImgSrc(icon string) ([]byte, error) {
+func iconImage(icon string) ([]byte, error) {
 	res, err := http.Get(fmt.Sprintf("https://openweathermap.org/img/w/%s.png", icon))
 	if err != nil {
 		return nil, err

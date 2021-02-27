@@ -17,22 +17,17 @@ func init() {
 }
 
 func main() {
-	long, lat, err := coordinates()
+	lat, long, err := coordinates()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	loc, err := time.LoadLocation(os.Getenv("LOCATION"))
+	loc, err := location()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	f, err := openweather.GetWeather(long, lat)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = render(os.Stdout, *f, *loc)
+	err = render(os.Stdout, lat, long, *loc)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -52,8 +47,17 @@ func coordinates() (lat float64, long float64, err error) {
 	return
 }
 
-func render(wr io.Writer, f openweather.Forecast, loc time.Location) error {
-	data, err := openweather.TemplateData(f, loc)
+func location() (*time.Location, error) {
+	return time.LoadLocation(os.Getenv("LOCATION"))
+}
+
+func render(wr io.Writer, lat float64, long float64, loc time.Location) error {
+	f, err := openweather.GetWeather(lat, long)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	data, err := openweather.TemplateData(*f, loc)
 	if err != nil {
 		return err
 	}
