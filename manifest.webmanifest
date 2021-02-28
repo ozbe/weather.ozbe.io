@@ -11,5 +11,5 @@
   ],
   "name": "weather.ozbe.io",
   "short_name": "Weather",
-  "start_url": "/index.html"
+  "start_url": "/?source=pwa"
 }
