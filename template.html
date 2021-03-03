@@ -186,17 +186,17 @@
   </script>
   {{end}}
   <script>
-    function currentHour() {
-      var d = new Date();
-      var h = d.getHours();
+    (function () {
+      function currentHour() {
+        var d = new Date();
+        var h = d.getHours();
 
-      if (h > 12) {
-        return "" + h % 12 + " PM";
-      } 
-      return "" + h + " AM";
-    }
+        if (h > 12) {
+          return "" + h % 12 + " PM";
+        } 
+        return "" + h + " AM";
+      }
 
-    window.addEventListener('load', function() {
       var hour = currentHour();
       var tbody = document.getElementsByTagName('tbody')[0];
       var rows = tbody.children;
@@ -208,6 +208,6 @@
           break;
         }
       }
-    }, false);
+    })();
   </script>
 </body>
