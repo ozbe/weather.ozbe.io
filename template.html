@@ -110,20 +110,27 @@
   </div>
   <script data-goatcounter="https://ozbe-weather.goatcounter.com/count"
         async src="//gc.zgo.at/count.js"></script>
-
   <script>
-    window.addEventListener('load', function () {
+    function addOnload(fn) {
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', fn);
+        fn();
+      }
+    }
+  </script>
+  <script>
+    addOnload(function () {
       Chart.scaleService.updateScaleDefaults('linear', {
         ticks: {
           stepSize: 1,
           precision: 0,
         }
       });
-    }, false);
+    });
   </script>
   {{range $index, $day := .Days}}
   <script>
-      window.addEventListener('load', function() {
+      addOnload(function() {
         var lineChartData = {
         labels: {{$day.Times}},
         datasets: [{
@@ -182,7 +189,7 @@
           }
         }
       });
-    }, false);
+    });
   </script>
   {{end}}
   <script>
