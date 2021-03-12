@@ -140,7 +140,7 @@
           backgroundColor: 'rgb(164, 212, 232)',
           fill: false,
           data: {{$day.Temps}},
-          yAxisID: 'y-axis-1',
+          yAxisID: 'feels-like-axis',
           pointRadius: 0,
         }, {
           label: 'UV',
@@ -150,7 +150,7 @@
           backgroundColor: 'rgb(248, 249, 251)',
           fill: false,
           data: {{$day.UVs}},
-          yAxisID: 'y-axis-2'
+          yAxisID: 'uv-axis'
         }]
       };
       
@@ -179,12 +179,20 @@
               type: 'linear',
               display: false,
               position: 'left',
-              id: 'y-axis-1',
+              id: 'feels-like-axis',
+              ticks: {
+                  suggestedMin: 5,
+                  suggestedMax: 40
+              },
             }, {
               type: 'linear',
               display: false,
               position: 'right',
-              id: 'y-axis-2',
+              id: 'uv-axis',
+              ticks: {
+                  suggestedMin: 0,
+                  suggestedMax: 10
+              },
             }],
           }
         }
