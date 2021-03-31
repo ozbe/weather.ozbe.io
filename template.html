@@ -206,10 +206,14 @@
         var d = new Date();
         var h = d.getHours();
 
-        if (h > 12) {
-          return "" + h % 12 + " PM";
-        } 
-        return "" + h + " AM";
+        var displayHour = (h > 12)
+          ? h % 12
+          : h;
+        var displayAbbv = (h >= 12)
+          ? "PM"
+          : "AM"
+
+        return `${displayHour} ${displayAbbv}`;
       }
 
       var hour = currentHour();
