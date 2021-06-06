@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/hashicorp/go-retryablehttp"
 )
 
 type forecast struct {
@@ -41,8 +43,10 @@ type weather struct {
 func getWeather(lat float64, long float64) (*forecast, error) {
 	apiKey := os.Getenv("OPENWEATHER_API_KEY")
 	url := fmt.Sprintf("https://api.openweathermap.org/data/2.5/onecall?lat=%f&lon=%f&exclude=current,minutely,daily,alerts&units=metric&appid=%s", lat, long, apiKey)
+	client := retryablehttp.NewClient()
+	client.Logger = nil
 
-	res, err := http.Get(url)
+	res, err := client.Get(url)
 	if err != nil {
 		return nil, err
 	}
